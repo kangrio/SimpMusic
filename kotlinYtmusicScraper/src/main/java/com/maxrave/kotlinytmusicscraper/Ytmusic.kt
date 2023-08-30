@@ -63,6 +63,16 @@ class Ytmusic {
             })
         }
 
+        install(HttpRequestRetry) {
+            retryOnServerErrors(maxRetries = 10)
+            exponentialDelay(
+                base = 2.0,
+                maxDelayMs = 2000,
+                randomizationMs = 1000,
+            )
+        }
+
+
         install(ContentEncoding) {
             brotli(1.0F)
             gzip(0.9F)

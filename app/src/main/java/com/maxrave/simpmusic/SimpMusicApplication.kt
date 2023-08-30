@@ -24,7 +24,7 @@ class SimpMusicApplication: Application(){
                 //required
                 mailTo = "simpmusic.maxravedev@gmail.com"
                 //defaults to true
-                reportAsFile = true
+                reportAsFile = false
                 //defaults to ACRA-report.stacktrace
                 reportFileName = "Crash.txt"
                 //defaults to "<applicationId> Crash Report"
