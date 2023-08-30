@@ -10,19 +10,14 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
 import android.view.animation.AnimationUtils
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.graphics.ColorUtils
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.offline.DownloadService
@@ -64,6 +59,8 @@ import kotlinx.coroutines.runBlocking
 import pub.devrel.easypermissions.EasyPermissions
 import java.util.Locale
 import kotlin.system.exitProcess
+import com.maxrave.simpmusic.data.model.browse.album.Track
+import com.maxrave.simpmusic.viewModel.HomeViewModel
 
 @UnstableApi
 @AndroidEntryPoint
@@ -72,6 +69,7 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
     private val viewModel by viewModels<SharedViewModel>()
     private var action: String? = null
     private var data: Uri? = null
+    private val viewModel2 by viewModels<HomeViewModel>()
 
     override fun onResume() {
         super.onResume()
@@ -106,12 +104,18 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
         if (getString(FIRST_TIME_MIGRATION) != STATUS_DONE) {
             Log.d("Locale Key", "onCreate: ${Locale.getDefault().toLanguageTag()}")
             if (SUPPORTED_LANGUAGE.codes.contains(Locale.getDefault().toLanguageTag())) {
-                Log.d("Contains", "onCreate: ${SUPPORTED_LANGUAGE.codes.contains(Locale.getDefault().toLanguageTag())}")
+                Log.d(
+                    "Contains",
+                    "onCreate: ${
+                        SUPPORTED_LANGUAGE.codes.contains(
+                            Locale.getDefault().toLanguageTag()
+                        )
+                    }"
+                )
                 putString(SELECTED_LANGUAGE, Locale.getDefault().toLanguageTag())
                 if (SUPPORTED_LOCATION.items.contains(Locale.getDefault().country)) {
                     putString("location", Locale.getDefault().country)
-                }
-                else {
+                } else {
                     putString("location", "US")
                 }
                 YouTube.locale = YouTubeLocale(
@@ -142,10 +146,14 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
         }
 
-        if (!EasyPermissions.hasPermissions(this, Manifest.permission.POST_NOTIFICATIONS)){
+        if (!EasyPermissions.hasPermissions(this, Manifest.permission.POST_NOTIFICATIONS)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                EasyPermissions.requestPermissions(this,
-                    getString(R.string.this_app_needs_to_access_your_notification), 1, Manifest.permission.POST_NOTIFICATIONS)
+                EasyPermissions.requestPermissions(
+                    this,
+                    getString(R.string.this_app_needs_to_access_your_notification),
+                    1,
+                    Manifest.permission.POST_NOTIFICATIONS
+                )
             }
         }
 
@@ -206,7 +214,7 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
 
         })
         binding.btRemoveMiniPlayer.setOnClickListener {
-            if (viewModel.isServiceRunning.value == true){
+            if (viewModel.isServiceRunning.value == true) {
                 viewModel.stopPlayer()
             }
             viewModel.videoId.postValue(null)
@@ -225,7 +233,7 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
         lifecycleScope.launch {
             val job1 = launch {
                 viewModel.intent.collectLatest { intent ->
-                    if (intent != null){
+                    if (intent != null) {
                         data = intent.data ?: intent.getStringExtra(Intent.EXTRA_TEXT)?.toUri()
                         Log.d("MainActivity", "onCreate: $data")
                         if (data != null) {
@@ -233,30 +241,36 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
                                 "playlist" -> data!!.getQueryParameter("list")?.let { playlistId ->
                                     if (playlistId.startsWith("OLAK5uy_")) {
                                         viewModel.intent.value = null
-                                        navController.navigate(R.id.action_global_albumFragment, Bundle().apply {
-                                            putString("browseId", playlistId)
-                                        })
-                                    }
-                                    else if (playlistId.startsWith("VL")) {
+                                        navController.navigate(
+                                            R.id.action_global_albumFragment,
+                                            Bundle().apply {
+                                                putString("browseId", playlistId)
+                                            })
+                                    } else if (playlistId.startsWith("VL")) {
                                         viewModel.intent.value = null
-                                        navController.navigate(R.id.action_global_playlistFragment, Bundle().apply {
-                                            putString("id", playlistId)
-                                        })
-                                    }
-                                    else {
+                                        navController.navigate(
+                                            R.id.action_global_playlistFragment,
+                                            Bundle().apply {
+                                                putString("id", playlistId)
+                                            })
+                                    } else {
                                         viewModel.intent.value = null
-                                        navController.navigate(R.id.action_global_playlistFragment, Bundle().apply {
-                                            putString("id", "VL$playlistId")
-                                        })
+                                        navController.navigate(
+                                            R.id.action_global_playlistFragment,
+                                            Bundle().apply {
+                                                putString("id", "VL$playlistId")
+                                            })
                                     }
                                 }
 
                                 "channel", "c" -> data!!.lastPathSegment?.let { artistId ->
                                     if (artistId.startsWith("UC")) {
                                         viewModel.intent.value = null
-                                        navController.navigate(R.id.action_global_artistFragment, Bundle().apply {
-                                            putString("channelId", artistId)
-                                        })
+                                        navController.navigate(
+                                            R.id.action_global_artistFragment,
+                                            Bundle().apply {
+                                                putString("channelId", artistId)
+                                            })
                                     }
 //                                    else {
 //                                        viewModel.convertNameToId(artistId)
@@ -284,7 +298,7 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
                                 }?.let { videoId ->
                                     viewModel.getSongFull(videoId)
                                     viewModel.songFull.observe(this@MainActivity) {
-                                        if (it != null){
+                                        if (it != null) {
                                             val track = it.toTrack(videoId)
                                             Queue.clear()
                                             Queue.setNowPlaying(track)
@@ -293,7 +307,10 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
                                             args.putString("from", getString(R.string.shared))
                                             args.putString("type", Config.SONG_CLICK)
                                             viewModel.intent.value = null
-                                            navController.navigate(R.id.action_global_nowPlayingFragment, args)
+                                            navController.navigate(
+                                                R.id.action_global_nowPlayingFragment,
+                                                args
+                                            )
                                         }
                                     }
                                 }
@@ -303,9 +320,9 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
                 }
             }
             val job5 = launch {
-                viewModel.nowPlayingMediaItem.observe(this@MainActivity){
-                    if (it != null){
-                        if (viewModel.isServiceRunning.value == false){
+                viewModel.nowPlayingMediaItem.observe(this@MainActivity) {
+                    if (it != null) {
+                        if (viewModel.isServiceRunning.value == false) {
                             startService()
                             viewModel.isServiceRunning.postValue(true)
                         }
@@ -329,16 +346,18 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
                                     val defaultColor = 0x000000
                                     var startColor = p.getDarkVibrantColor(defaultColor)
                                     Log.d("Check Start Color", "transform: $startColor")
-                                    if (startColor == defaultColor){
+                                    if (startColor == defaultColor) {
                                         startColor = p.getDarkMutedColor(defaultColor)
-                                        if (startColor == defaultColor){
+                                        if (startColor == defaultColor) {
                                             startColor = p.getVibrantColor(defaultColor)
-                                            if (startColor == defaultColor){
+                                            if (startColor == defaultColor) {
                                                 startColor = p.getMutedColor(defaultColor)
-                                                if (startColor == defaultColor){
-                                                    startColor = p.getLightVibrantColor(defaultColor)
-                                                    if (startColor == defaultColor){
-                                                        startColor = p.getLightMutedColor(defaultColor)
+                                                if (startColor == defaultColor) {
+                                                    startColor =
+                                                        p.getLightVibrantColor(defaultColor)
+                                                    if (startColor == defaultColor) {
+                                                        startColor =
+                                                            p.getLightMutedColor(defaultColor)
                                                     }
                                                 }
                                             }
@@ -367,13 +386,13 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
                 }
             }
             val job2 = launch {
-                viewModel.progress.collect{
+                viewModel.progress.collect {
                     binding.progressBar.progress = (it * 100).toInt()
                 }
             }
 
             val job6 = launch {
-                viewModel.liked.collect{ liked ->
+                viewModel.liked.collect { liked ->
                     binding.cbFavorite.isChecked = liked
                 }
             }
@@ -384,14 +403,46 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
             job6.join()
         }
         binding.card.animation = AnimationUtils.loadAnimation(this, R.anim.bottom_to_top)
-        binding.cbFavorite.setOnCheckedChangeListener{ _, isChecked ->
-            if (!isChecked){
+        binding.cbFavorite.setOnCheckedChangeListener { _, isChecked ->
+            if (!isChecked) {
                 Log.d("cbFavorite", "onCheckedChanged: $isChecked")
-                viewModel.nowPlayingMediaItem.value?.let { nowPlayingSong -> viewModel.updateLikeStatus(nowPlayingSong.mediaId, false) }
+                viewModel.nowPlayingMediaItem.value?.let { nowPlayingSong ->
+                    viewModel.updateLikeStatus(
+                        nowPlayingSong.mediaId,
+                        false
+                    )
+                }
+            } else {
+                Log.d("cbFavorite", "onCheckedChanged: $isChecked")
+                viewModel.nowPlayingMediaItem.value?.let { nowPlayingSong ->
+                    viewModel.updateLikeStatus(
+                        nowPlayingSong.mediaId,
+                        true
+                    )
+                }
             }
-            else {
-                Log.d("cbFavorite", "onCheckedChanged: $isChecked")
-                viewModel.nowPlayingMediaItem.value?.let { nowPlayingSong -> viewModel.updateLikeStatus(nowPlayingSong.mediaId, true) }
+        }
+
+        viewModel2.homeItemList.observe(this@MainActivity) { response ->
+            when (response) {
+                is Resource.Success -> {
+                    response.data?.let { homeItemList ->
+                        val quickpickTrack =
+                            homeItemList.first().contents.filter { it?.artists!!.isNotEmpty() }.random()
+                        val track: Track = quickpickTrack!!.toTrack()
+                        Queue.clear()
+                        Queue.setNowPlaying(track)
+                        val args = Bundle()
+                        args.putString("videoId", track.videoId)
+                        args.putString("from", "Auto play")
+                        args.putString("type", Config.SONG_CLICK)
+                        navController.navigate(R.id.action_global_nowPlayingFragment, args)
+                    }
+                }
+
+                is Resource.Error -> {
+                    Log.e("MainActivity", "Auto play Error")
+                }
             }
         }
     }
@@ -408,15 +459,15 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
             Log.d("Service", "Service started")
         }
     }
-    private fun stopService(){
-        if (viewModel.isServiceRunning.value == true){
+    private fun stopService() {
+        if (viewModel.isServiceRunning.value == true) {
             stopService(Intent(this, SimpleMediaService::class.java))
             Log.d("Service", "Service stopped")
-            if (this.isMyServiceRunning(FetchQueue:: class.java)){
+            if (this.isMyServiceRunning(FetchQueue::class.java)) {
                 stopService(Intent(this, FetchQueue::class.java))
                 Log.d("Service", "FetchQueue stopped")
             }
-            if (this.isMyServiceRunning(DownloadService:: class.java)){
+            if (this.isMyServiceRunning(DownloadService::class.java)) {
                 this.stopService(Intent(this, DownloadService::class.java))
                 viewModel.changeAllDownloadingToError()
                 Log.d("Service", "DownloadService stopped")
@@ -429,11 +480,11 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
 
     override fun onNowPlayingSongChange() {
         viewModel.metadata.observe(this) {
-            when(it){
+            when (it) {
                 is Resource.Success -> {
                     binding.songTitle.text = it.data?.title
                     binding.songTitle.isSelected = true
-                    if (it.data?.artists != null){
+                    if (it.data?.artists != null) {
                         var tempArtist = mutableListOf<String>()
                         for (artist in it.data.artists) {
                             tempArtist.add(artist.name)
@@ -453,10 +504,10 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
     }
 
     override fun onIsPlayingChange() {
-        viewModel.isPlaying.observe(this){
-            if (it){
+        viewModel.isPlaying.observe(this) {
+            if (it) {
                 binding.btPlayPause.setImageResource(R.drawable.baseline_pause_24)
-            }else{
+            } else {
                 binding.btPlayPause.setImageResource(R.drawable.baseline_play_arrow_24)
             }
         }
@@ -466,11 +517,11 @@ class MainActivity : AppCompatActivity(), NowPlayingFragment.OnNowPlayingSongCha
 
     }
 
-    fun hideBottomNav(){
+    fun hideBottomNav() {
         binding.bottomNavigationView.visibility = View.GONE
         binding.miniPlayerContainer.visibility = View.GONE
     }
-    fun showBottomNav(){
+    fun showBottomNav() {
         binding.bottomNavigationView.visibility = View.VISIBLE
         binding.miniPlayerContainer.visibility = View.VISIBLE
     }
