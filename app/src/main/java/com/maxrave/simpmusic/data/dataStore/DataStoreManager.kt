@@ -91,7 +91,7 @@ class DataStoreManager @Inject constructor(@ApplicationContext appContext: Conte
     }
 
     val normalizeVolume: Flow<String> = settingsDataStore.data.map { preferences ->
-        preferences[NORMALIZE_VOLUME] ?: FALSE
+        preferences[NORMALIZE_VOLUME] ?: TRUE
     }
 
     suspend fun setNormalizeVolume(normalize: Boolean) {
