@@ -107,7 +107,7 @@ class DataStoreManager @Inject constructor(@ApplicationContext appContext: Conte
     }
 
     val pipedInstance: Flow<String> = settingsDataStore.data.map { preferences ->
-        preferences[PIPED] ?: "watchapi.whatever.social"
+        preferences[PIPED] ?: "pipedapi.kavin.rocks"
     }
 
     suspend fun setPipedInstance(instance: String) {
