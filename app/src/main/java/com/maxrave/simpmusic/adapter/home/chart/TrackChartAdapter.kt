@@ -17,7 +17,7 @@ class TrackChartAdapter( var trackList: ArrayList<ItemVideo>, val context: Conte
     }
     fun updateData(newData: List<ItemVideo>){
         trackList.clear()
-        trackList.addAll(newData)
+        trackList.addAll(newData.filter { it.artists != null })
         notifyDataSetChanged()
     }
     interface SetOnItemClickListener {
