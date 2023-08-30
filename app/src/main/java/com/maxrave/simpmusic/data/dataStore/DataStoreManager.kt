@@ -31,7 +31,7 @@ class DataStoreManager @Inject constructor(@ApplicationContext appContext: Conte
     }
 
     val quality: Flow<String> = settingsDataStore.data.map { preferences ->
-        preferences[QUALITY] ?: COMMON_QUALITY.items.last().toString()
+        preferences[QUALITY] ?: COMMON_QUALITY.items[0].toString()
     }
 
     suspend fun restore(isRestoring: Boolean) {
