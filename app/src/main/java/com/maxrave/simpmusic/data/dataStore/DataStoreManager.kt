@@ -21,7 +21,7 @@ class DataStoreManager @Inject constructor(@ApplicationContext appContext: Conte
     private val settingsDataStore = appContext.dataStore
 
     val location: Flow<String> = settingsDataStore.data.map { preferences ->
-        preferences[LOCATION] ?: "VN"
+        preferences[LOCATION] ?: "TH"
     }
 
     suspend fun setLocation(location: String) {
@@ -31,7 +31,7 @@ class DataStoreManager @Inject constructor(@ApplicationContext appContext: Conte
     }
 
     val quality: Flow<String> = settingsDataStore.data.map { preferences ->
-        preferences[QUALITY] ?: COMMON_QUALITY.items[0].toString()
+        preferences[QUALITY] ?: COMMON_QUALITY.items.last().toString()
     }
 
     suspend fun restore(isRestoring: Boolean) {
